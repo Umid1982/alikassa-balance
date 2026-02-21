@@ -8,15 +8,17 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Balance extends Model
 {
-    protected $table = 'balance';
+    protected $table = 'balances';
     protected $fillable = [
         'user_id',
         'currency',
         'amount',
+        'locked_amount',
     ];
 
     protected $casts = [
-        'amount' => 'string', // чтобы не потерять точность при JSON/логике
+        'amount' => 'string',
+        'locked_amount' => 'string',
     ];
 
     /**
