@@ -10,6 +10,7 @@ use App\Http\Resources\BalanceResource;
 use App\Http\Traits\ApiResponseHelper;
 use App\Models\Balance;
 use App\Services\BalanceService;
+use Illuminate\Http\JsonResponse;
 
 class BalanceController extends Controller
 {
@@ -19,42 +20,67 @@ class BalanceController extends Controller
     {
     }
 
-    public function depositSeen(DepositSeenRequest $request)
+    /**
+     * @param DepositSeenRequest $request
+     * @return JsonResponse
+     */
+    public function depositSeen(DepositSeenRequest $request): JsonResponse
     {
         $this->service->depositSeen(...$request->toDTO()->toArray());
 
         return $this->successResponse(null, 'data', 200, 'Deposit recorded');
     }
 
-    public function confirmDeposit(ExternalIdRequest $request)
+    /**
+     * @param ExternalIdRequest $request
+     * @return JsonResponse
+     */
+    public function confirmDeposit(ExternalIdRequest $request): JsonResponse
     {
         $this->service->confirmDeposit($request->validated('external_id'));
 
         return $this->successResponse(null, 'data', 200, 'Deposit confirmed');
     }
 
-    public function reserveWithdraw(ReserveWithdrawRequest $request)
+    /**
+     * @param ReserveWithdrawRequest $request
+     * @return JsonResponse
+     */
+    public function reserveWithdraw(ReserveWithdrawRequest $request): JsonResponse
     {
         $this->service->reserveWithdraw(...$request->toDTO()->toArray());
 
         return $this->successResponse(null, 'data', 200, 'Withdraw reserved');
     }
 
-    public function commitWithdraw(ExternalIdRequest $request)
+    /**
+     * @param ExternalIdRequest $request
+     * @return JsonResponse
+     */
+    public function commitWithdraw(ExternalIdRequest $request): JsonResponse
     {
         $this->service->commitWithdraw($request->validated('external_id'));
 
         return $this->successResponse(null, 'data', 200, 'Withdraw completed');
     }
 
-    public function cancelWithdraw(ExternalIdRequest $request)
+    /**
+     * @param ExternalIdRequest $request
+     * @return JsonResponse
+     */
+    public function cancelWithdraw(ExternalIdRequest $request): JsonResponse
     {
         $this->service->cancelWithdraw($request->validated('external_id'));
 
         return $this->successResponse(null, 'data', 200, 'Withdraw canceled');
     }
 
-    public function show(int $userId, string $currency)
+    /**
+     * @param int $userId
+     * @param string $currency
+     * @return JsonResponse
+     */
+    public function show(int $userId, string $currency): JsonResponse
     {
         $balance = Balance::query()->where('user_id', $userId)
             ->where('currency', $currency)
