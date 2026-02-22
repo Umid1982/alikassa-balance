@@ -58,7 +58,7 @@ class BalanceService
                 return;
             }
 
-            $balance = $operation->balance()->lockForUpdate()->first();
+            $balance = $this->balanceRepository->getByIdForUpdate($operation->balance_id);
 
             $balance->amount = bcadd($balance->amount, $operation->amount, 18);
             $this->balanceRepository->save($balance);
@@ -118,7 +118,7 @@ class BalanceService
                 return;
             }
 
-            $balance = $operation->balance()->lockForUpdate()->first();
+            $balance = $this->balanceRepository->getByIdForUpdate($operation->balance_id);;
 
             $balance->locked_amount = bcsub($balance->locked_amount, $operation->amount, 18);
             $this->balanceRepository->save($balance);
@@ -142,7 +142,7 @@ class BalanceService
                 return;
             }
 
-            $balance = $operation->balance()->lockForUpdate()->first();
+            $balance = $this->balanceRepository->getByIdForUpdate($operation->balance_id);
 
             $balance->locked_amount = bcsub($balance->locked_amount, $operation->amount, 18);
             $balance->amount = bcadd($balance->amount, $operation->amount, 18);

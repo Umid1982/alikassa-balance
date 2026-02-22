@@ -27,4 +27,15 @@ class BalanceRepository
     {
         $balance->save();
     }
+
+    /**
+     * @param int $id
+     * @return mixed
+     */
+    public function getByIdForUpdate(int $id): mixed
+    {
+        return Balance::query()->where('id', $id)
+            ->lockForUpdate()
+            ->firstOrFail();
+    }
 }
