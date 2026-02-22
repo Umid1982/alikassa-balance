@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Models\Balance;
+use Illuminate\Database\Eloquent\Model;
 
 class BalanceRepository
 {
@@ -36,6 +37,19 @@ class BalanceRepository
     {
         return Balance::query()->where('id', $id)
             ->lockForUpdate()
+            ->firstOrFail();
+    }
+
+    /**
+     * @param int $userId
+     * @param string $currency
+     * @return Balance|Model
+     */
+    public function getByUserAndCurrency(int $userId, string $currency): Model|Balance
+    {
+        return Balance::query()
+            ->where('user_id', $userId)
+            ->where('currency', $currency)
             ->firstOrFail();
     }
 }
