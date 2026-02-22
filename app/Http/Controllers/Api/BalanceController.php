@@ -8,7 +8,6 @@ use App\Http\Requests\Balance\ExternalIdRequest;
 use App\Http\Requests\Balance\ReserveWithdrawRequest;
 use App\Http\Resources\BalanceResource;
 use App\Http\Traits\ApiResponseHelper;
-use App\Models\Balance;
 use App\Services\BalanceService;
 use Illuminate\Http\JsonResponse;
 
@@ -16,7 +15,7 @@ class BalanceController extends Controller
 {
     use ApiResponseHelper;
 
-    public function __construct(protected BalanceService $service)
+    public function __construct(protected readonly BalanceService $service)
     {
     }
 
@@ -26,7 +25,7 @@ class BalanceController extends Controller
      */
     public function depositSeen(DepositSeenRequest $request): JsonResponse
     {
-        $this->service->depositSeen(...$request->toDTO()->toArray());
+        $this->service->depositSeen($request->toDTO());
 
         return $this->successResponse(null, 'data', 200, 'Deposit recorded');
     }
@@ -48,7 +47,7 @@ class BalanceController extends Controller
      */
     public function reserveWithdraw(ReserveWithdrawRequest $request): JsonResponse
     {
-        $this->service->reserveWithdraw(...$request->toDTO()->toArray());
+        $this->service->reserveWithdraw($request->toDTO());
 
         return $this->successResponse(null, 'data', 200, 'Withdraw reserved');
     }
@@ -82,9 +81,7 @@ class BalanceController extends Controller
      */
     public function show(int $userId, string $currency): JsonResponse
     {
-        $balance = Balance::query()->where('user_id', $userId)
-            ->where('currency', $currency)
-            ->firstOrFail();
+        $balance = $this->service->getBalance($userId, $currency);
 
         return $this->successResponse(
             BalanceResource::make($balance)

@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\DTOs\BalanceOperationDTO;
 use App\Models\BalanceOperation;
 
 class BalanceOperationRepository
@@ -30,12 +31,20 @@ class BalanceOperationRepository
     }
 
     /**
-     * @param array $data
-     * @return BalanceOperation
+     * @param int $balanceId
+     * @param BalanceOperationDTO $dto
+     * @return mixed
      */
-    public function create(array $data): BalanceOperation
+    public function createDeposit(int $balanceId, BalanceOperationDTO $dto): mixed
     {
-        return BalanceOperation::query()->create($data);
+        return BalanceOperation::query()->create([
+            'balance_id' => $balanceId,
+            'type' => 'deposit',
+            'direction' => 'credit',
+            'amount' => $dto->amount,
+            'status' => 'pending',
+            'external_id' => $dto->externalId,
+        ]);
     }
 
     /**
@@ -45,5 +54,22 @@ class BalanceOperationRepository
     public function save(BalanceOperation $operation): void
     {
         $operation->save();
+    }
+
+    /**
+     * @param int $balanceId
+     * @param BalanceOperationDTO $dto
+     * @return mixed
+     */
+    public function createWithdrawReservation(int $balanceId, BalanceOperationDTO $dto): mixed
+    {
+        return BalanceOperation::query()->create([
+            'balance_id' => $balanceId,
+            'type' => 'withdraw',
+            'direction' => 'debit',
+            'amount' => $dto->amount,
+            'status' => 'reserved',
+            'external_id' => $dto->externalId,
+        ]);
     }
 }
