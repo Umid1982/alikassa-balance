@@ -1,59 +1,238 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Crypto Balance API
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+REST API модуль учета крипто-баланса пользователя с безопасным зачислением и списанием средств.
 
-## About Laravel
+Проект реализован как тестовое задание и демонстрирует production-подход к работе с денежными операциями, идемпотентностью и защитой от race conditions.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 📋 Содержание
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- [Возможности](#-возможности)
+- [Технологии](#-технологии)
+- [Установка](#-установка)
+- [API Документация](#-api-документация)
+- [Архитектура](#-архитектура)
+- [Особенности реализации](#-особенности-реализации)
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## 🚀 Возможности
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### Основные требования ✅
 
-## Laravel Sponsors
+- ✅ Зачисление средств (deposit)
+- ✅ Подтверждение депозита
+- ✅ Резервирование средств при выводе
+- ✅ Подтверждение вывода
+- ✅ Отмена вывода
+- ✅ Защита от повторной обработки операций (idempotency)
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### Учет рисков ⭐
 
-### Premium Partners
+- ⭐ Идемпотентность через `external_id`
+- ⭐ Защита от race conditions через `DB::transaction` + `lockForUpdate`
+- ⭐ Разделение `amount` и `locked_amount`
+- ⭐ Точная арифметика через BCMath (`decimal 36,18`)
+- ⭐ Защита от двойного списания
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+---
 
-## Contributing
+## 🛠 Технологии
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+- **PHP** 8+
+- **Laravel**
+- **Laravel Sanctum** — API авторизация
+- **MySQL / PostgreSQL / SQLite**
+- **BCMath** — точная работа с дробными числами
 
-## Code of Conduct
+---
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## 🔧 Установка
 
-## Security Vulnerabilities
+```bash
+git clone <repository-url>
+cd crypto-balance
+composer install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate
+php artisan serve
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+---
 
-## License
+## 📚 API Документация
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### Базовый URL
+
+```
+http://localhost:8000/api
+```
+
+---
+
+### 🟢 Регистрация депозита (webhook received)
+
+```
+POST /api/balance/deposit/seen
+```
+
+```json
+{
+  "user_id": 1,
+  "currency": "USDT",
+  "amount": "100.00",
+  "external_id": "tx_hash_123"
+}
+```
+
+---
+
+### 🟢 Подтверждение депозита
+
+```
+POST /api/balance/deposit/confirm
+```
+
+```json
+{
+  "external_id": "tx_hash_123"
+}
+```
+
+---
+
+### 🔴 Резервирование вывода
+
+```
+POST /api/balance/withdraw/reserve
+```
+
+```json
+{
+  "user_id": 1,
+  "currency": "USDT",
+  "amount": "50.00",
+  "external_id": "withdraw_001"
+}
+```
+
+---
+
+### 🔴 Подтверждение вывода
+
+```
+POST /api/balance/withdraw/commit
+```
+
+```json
+{
+  "external_id": "withdraw_001"
+}
+```
+
+---
+
+### 🔴 Отмена вывода
+
+```
+POST /api/balance/withdraw/cancel
+```
+
+```json
+{
+  "external_id": "withdraw_001"
+}
+```
+
+---
+
+## 🏗 Архитектура
+
+Проект следует принципам разделения ответственности:
+
+```
+app/
+├── Http/
+│   ├── Controllers/
+│   ├── Requests/
+│   ├── Resources/
+│   └── Traits/
+├── Services/
+├── Repositories/
+├── DTOs/
+└── Models/
+```
+
+### Слои:
+
+- **Controllers** — обработка HTTP
+- **Services** — бизнес-логика операций
+- **Repositories** — работа с БД
+- **DTO** — передача данных между слоями
+
+---
+
+## 📊 Структура баланса
+
+### Таблица `balances`
+
+| Поле | Описание |
+|------|----------|
+| amount | Доступный баланс |
+| locked_amount | Зарезервированные средства |
+
+---
+
+### Таблица `balance_operations`
+
+| Поле | Описание |
+|------|----------|
+| type | deposit / withdraw |
+| status | pending / confirmed / reserved / completed / canceled |
+| external_id | Идемпотентный ключ |
+
+---
+
+## 🎯 Особенности реализации
+
+### 🔐 Защита от гонок транзакций
+
+Используется:
+
+```php
+DB::transaction()
+SELECT ... FOR UPDATE
+```
+
+что исключает двойное списание средств при конкурентных запросах.
+
+---
+
+### 🔁 Идемпотентность
+
+Каждая операция привязана к `external_id`.  
+Повторный webhook не приведет к повторному зачислению или списанию.
+
+---
+
+### 💰 Модель вывода средств
+
+1. Проверка достаточности средств
+2. Перемещение средств в `locked_amount`
+3. Подтверждение или отмена
+4. Финализация операции
+
+---
+
+## 👤 Автор
+
+Umid Urinov  
+Backend Developer (Laravel, Financial Systems)
+
+---
+
+## 🔄 Версия
+
+v1.0.0 — Реализован модуль учета крипто-баланса с учетом рисков и асинхронности.
